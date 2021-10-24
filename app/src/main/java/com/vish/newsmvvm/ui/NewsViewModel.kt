@@ -16,6 +16,10 @@ class NewsViewModel(
     //we are using this to keep page number state in viewModel so the device config change won't affect our pagination
     var breakingNewsPage = 1
 
+    val searchNews: MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
+    //we are using this to keep page number state in viewModel so the device config change won't affect our pagination
+    var searchNewsPage = 1
+
     init {
         getBreakingNews("in")
     }
@@ -35,10 +39,31 @@ class NewsViewModel(
         breakingNews.postValue(handleBreakingNewsResponse(response))
     }
 
+    fun searchNews(searchQuery: String) = viewModelScope.launch {
+        searchNews.postValue(Resource.Loading())
+
+        //here we get the actual network response
+        val response = newRepository.searchNews(searchQuery, searchNewsPage)
+
+        //process response and post in breakingNews
+        searchNews.postValue(handleSearchNewsResponse(response))
+
+    }
+
     /**
-     * Here we decide weather we return success or error
+     * Here we decide either we return success or error
      */
     private fun handleBreakingNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
+        if (response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
+            }
+        }
+
+        return Resource.Error(response.message())
+    }
+
+    private fun handleSearchNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
         if (response.isSuccessful) {
             response.body()?.let { resultResponse ->
                 return Resource.Success(resultResponse)
