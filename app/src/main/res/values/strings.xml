@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">News MVVM</string>
+    <string name="title_activity_news">NewsActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_breaking_news">Breaking News</string>
+    <string name="title_saved_news">Saved News</string>
+    <string name="title_search_news">Search News</string>
 </resources>
