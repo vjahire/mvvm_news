@@ -2,6 +2,7 @@ package com.vish.newsmvvm.repository
 
 import com.vish.newsmvvm.api.RetrofitInstance
 import com.vish.newsmvvm.db.ArticleDatabase
+import com.vish.newsmvvm.models.Article
 
 /**
  * This class is used to get data from database and remote server
@@ -14,4 +15,10 @@ class NewsRepository(
 
     suspend fun searchNews(searchQuery: String, pageNumber: Int) =
         RetrofitInstance.api.searchForNews(searchQuery, pageNumber)
+
+    suspend fun upsert(article: Article) = db.getArticleDao().upsert(article)
+
+    fun getSavedNews() = db.getArticleDao().getAllArticles()
+
+    suspend fun deleteArticle(article: Article) = db.getArticleDao().deleteArticle(article)
 }

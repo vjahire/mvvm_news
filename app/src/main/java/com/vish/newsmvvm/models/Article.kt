@@ -2,6 +2,7 @@ package com.vish.newsmvvm.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(
     tableName = "articles"
@@ -13,8 +14,8 @@ data class Article(
     val content: String,
     val description: String,
     val publishedAt: String,
-    val source: Source,
+    val source: Source? = null,
     val title: String,
     val url: String,
     val urlToImage: String
-)
+): Serializable

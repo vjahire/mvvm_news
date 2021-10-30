@@ -1,5 +1,6 @@
 package com.vish.newsmvvm.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,7 @@ import com.vish.newsmvvm.models.Article
 import kotlinx.android.synthetic.main.item_article_preview.view.*
 
 class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
-
+    private val TAG = "NewsAdapter"
 
     inner class ArticleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
@@ -41,13 +42,17 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
         val article = differ.currentList[position]
         holder.itemView.apply {
             Glide.with(this).load(article.urlToImage).into(ivArticleImage)
-            tvSource.text = article.source.name
+            tvSource.text = article.source?.name
             tvTitle.text = article.title
             tvDescription.text = article.description
             tvPublishedAt.text = article.publishedAt
-            setOnItemClickListener {
-                onItemClickListener?.let { it(article) }
+            setOnClickListener {
+                Log.i(TAG, "onBindViewHolder: itemViewClick")
+                onArticleClickListener?.let {
+                    it(article)
+                }
             }
+
         }
     }
 
@@ -55,9 +60,9 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>() {
         return differ.currentList.size
     }
 
-    private var onItemClickListener: ((Article) -> Unit)? = null
+    private var onArticleClickListener: ((Article) -> Unit)? = null
 
-    fun setOnItemClickListener(listener: (Article) -> Unit) {
-        onItemClickListener = listener
+    fun setOnArticleClickListener(listener: (Article) -> Unit) {
+        onArticleClickListener = listener
     }
 }

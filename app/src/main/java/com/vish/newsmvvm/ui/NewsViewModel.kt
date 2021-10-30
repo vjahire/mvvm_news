@@ -3,6 +3,7 @@ package com.vish.newsmvvm.ui
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vish.newsmvvm.models.Article
 import com.vish.newsmvvm.models.NewsResponse
 import com.vish.newsmvvm.repository.NewsRepository
 import com.vish.newsmvvm.util.Resource
@@ -10,15 +11,19 @@ import kotlinx.coroutines.launch
 import retrofit2.Response
 
 class NewsViewModel(
-    val newRepository: NewsRepository
+    val newsRepository: NewsRepository
 ) : ViewModel() {
     val breakingNews: MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
+
     //we are using this to keep page number state in viewModel so the device config change won't affect our pagination
     var breakingNewsPage = 1
+    var breakingNewsResponse: NewsResponse? = null
 
     val searchNews: MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
+
     //we are using this to keep page number state in viewModel so the device config change won't affect our pagination
     var searchNewsPage = 1
+    var searchNewsResponse: NewsResponse? = null
 
     init {
         getBreakingNews("in")
@@ -28,12 +33,12 @@ class NewsViewModel(
      * get the data from repository, but using coroutines
      * This view model scope will make sure that this coroutine stays only alive as long as our view model is alive
      */
-    private fun getBreakingNews(countryCode: String) = viewModelScope.launch {
+    fun getBreakingNews(countryCode: String) = viewModelScope.launch {
         //before making network call we should emit loading state so our fragment can handle that
         breakingNews.postValue(Resource.Loading())
 
         //here we get the actual network response
-        val response = newRepository.getBreakingNews(countryCode, breakingNewsPage)
+        val response = newsRepository.getBreakingNews(countryCode, breakingNewsPage)
 
         //process response and post in breakingNews
         breakingNews.postValue(handleBreakingNewsResponse(response))
@@ -43,7 +48,7 @@ class NewsViewModel(
         searchNews.postValue(Resource.Loading())
 
         //here we get the actual network response
-        val response = newRepository.searchNews(searchQuery, searchNewsPage)
+        val response = newsRepository.searchNews(searchQuery, searchNewsPage)
 
         //process response and post in breakingNews
         searchNews.postValue(handleSearchNewsResponse(response))
@@ -56,7 +61,15 @@ class NewsViewModel(
     private fun handleBreakingNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
         if (response.isSuccessful) {
             response.body()?.let { resultResponse ->
-                return Resource.Success(resultResponse)
+                breakingNewsPage++
+                if (breakingNewsResponse == null) {
+                    breakingNewsResponse = resultResponse
+                } else {
+                    val oldArticles = breakingNewsResponse?.articles
+                    val newArticles = resultResponse.articles
+                    oldArticles?.addAll(newArticles)
+                }
+                return Resource.Success(breakingNewsResponse ?: resultResponse)
             }
         }
 
@@ -66,11 +79,30 @@ class NewsViewModel(
     private fun handleSearchNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
         if (response.isSuccessful) {
             response.body()?.let { resultResponse ->
-                return Resource.Success(resultResponse)
+                searchNewsPage++
+                if (searchNewsResponse == null) {
+                    searchNewsResponse = resultResponse
+                } else {
+                    val oldArticles = searchNewsResponse?.articles
+                    val newArticles = resultResponse.articles
+                    oldArticles?.addAll(newArticles)
+                }
+                return Resource.Success(searchNewsResponse ?: resultResponse)
             }
         }
 
         return Resource.Error(response.message())
+    }
+
+    fun saveArticle(article: Article) = viewModelScope.launch {
+        newsRepository.upsert(article)
+    }
+
+    //returning livedata
+    fun getSavedNews() = newsRepository.getSavedNews()
+
+    fun deleteArticle(article: Article) = viewModelScope.launch {
+        newsRepository.deleteArticle(article)
     }
 
 }
